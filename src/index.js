@@ -1,32 +1,46 @@
-/* 
-  Implement a button which makes a get request to https://reqres.in/ to get a list of users and display them.
-  100% free reign to accomplish this goal however you wish, within the context of react.
-
-  apiMethods.js file has already been stubbed out for you. Feel free to use it or not.
-
-  ****Make any changes to this boilerplate that you want to.*****
-  ****The included code is only provided as a convienence.****
-
-  Bonus 1:  Add a button for each user to make a delete request to delete that user. 
-          Update the displayed users excluding the deleted user.
-
-  Bonus 2: Make a filter box to filter the displayed users by name.
-*/
-
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { getUsers /* bonus:, deleteUser*/ } from "./apiMethods";
-
 import "./styles.css";
+import { getUsers, deleteUser } from "./utils/apiMethods";
+import UserList from "./components/UserList";
+import FilterBox from "./components/FilterBox";
 
-function App() {
+const Index = () => {
+  const [users, setUsers] = useState([]);
+  const [filter, setFilter] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const fetchUsers = async () => {
+    const data = await getUsers();
+    setUsers(data);
+    setErrorMessage("");
+  };
+
+  const handleDelete = async (userId) => {
+    await deleteUser(userId);
+    setUsers(users.filter((user) => user.id !== userId));
+  };
+
+  const filteredUsers = users.filter((user) =>
+    `${user.first_name} ${user.last_name}`
+      .toLowerCase()
+      .includes(filter.toLowerCase())
+  );
+
+  const noResultsMessage =
+    filteredUsers.length === 0 && filter ? (
+      <p>No users found with that name.</p>
+    ) : null;
+
   return (
-    <div className="App">
+    <div className="app">
       <h2>Users from API:</h2>
-      <div></div>
+      <button onClick={fetchUsers}>Fetch Users</button>
+      <FilterBox filter={filter} setFilter={setFilter} />
+      {noResultsMessage}
+      <UserList users={filteredUsers} onDelete={handleDelete} />
     </div>
   );
-}
+};
 
-const rootElement = document.getElementById("root");
-ReactDOM.render(<App />, rootElement);
+ReactDOM.render(<Index />, document.getElementById("root"));
